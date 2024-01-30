@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .grid {
+      border: 2px solid black;
+      display: grid;
+      grid-template-columns: repeat(10, 40px);
+      width: 400px;
+    }
+
+    .square {
+      border: 2px solid black;
+      width: 40px;
+      height: 40px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Grid1</h2>
+  <div class="grid" id="grid1"></div>
+  <h2>Grid2</h2>
+  <div class="grid" id="grid2"></div>
+  <img id="ship1" src="https://creazilla-store.fra1.digitaloceanspaces.com/cliparts/3868258/battleship-clipart-md.png" draggable="true" ondragstart="drag(event, 'ship1')" width="40" height="30">
+  <img id="ship2" src="https://creazilla-store.fra1.digitaloceanspaces.com/cliparts/3868258/battleship-clipart-md.png" draggable="true" ondragstart="drag(event, 'ship2')" width="80" height="30">
+
+  <script>
+    const gridMap1 = document.getElementById('grid1');
+    for (let i = 0; i < 100; i++) {
+      const cellBox = document.createElement('div');
+      cellBox.classList.add('square');
+      gridMap1.appendChild(cellBox);
+    }
+  </script>
+
+  <script>
+    const gridMap2 = document.getElementById('grid2');
+    const occupiedCells = new Set();
+
+    for (let i = 0; i < 10; i++) {
+      for (let j = 0; j < 10; j++) {
+        const cellBox = document.createElement('div');
+        cellBox.classList.add('square');
+        cellBox.setAttribute('ondrop', 'drop(event)');
+        cellBox.setAttribute('ondragover', 'allowDrop(event)');
+        cellBox.dataset.column = j % 10;
+        if (i % 10 == 0) {
+          cellBox.dataset.column = i;
+        }
+        gridMap2.appendChild(cellBox);
+      }
+    }
+  </script>
+  <script>
+    function allowDrop(ev) {
+      ev.preventDefault();
+    }
+
+    function drag(ev, shipId) {
+      ev.dataTransfer.setData("text", shipId);
+    }
+
+    function drop(ev) {
+      ev.preventDefault();
+      var shipId = ev.dataTransfer.getData("text");
+      var dropTarget = ev.target;
+
+      if (shipId === "ship1") {
+        if (!occupiedCells.has(dropTarget)) {
+          dropTarget.appendChild(document.getElementById(shipId));
+          occupiedCells.add(dropTarget);
+        }
+      } 
+      else {
+        if (dropTarget.dataset.column != "9" && !occupiedCells.has(dropTarget)) {
+          dropTarget.appendChild(document.getElementById(shipId));
+          occupiedCells.add(dropTarget);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
