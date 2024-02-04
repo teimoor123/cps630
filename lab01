@@ -30,14 +30,16 @@
     let dragging = false;
     let dragOffsetX = 0;
     let dragOffsetY = 0;
+    let userTurn = true;
 
     let ships = [
-      { ogX: 30, ogY: 305, x: 30, y: 305, width: 30, height: 30, dragging: false, placed: false },
-      { ogX: 90, ogY: 305, x: 90, y: 305, width: 30, height: 60, dragging: false, placed: false },
-      { ogX: 150, ogY: 305, x: 150, y: 305, width: 30, height: 90, dragging: false, placed: false }
+      { ogX: 30, ogY: 305, x: 30, y: 305, width: 30, height: 30, dragging: false, placed: false, size: 1, timesHit: 0 },
+      { ogX: 90, ogY: 305, x: 90, y: 305, width: 30, height: 60, dragging: false, placed: false, size: 2, timesHit: 0 },
+      { ogX: 150, ogY: 305, x: 150, y: 305, width: 30, height: 90, dragging: false, placed: false, size: 3, timesHit: 0 }
     ];
-    let ships2 = [[5, 5], [5, 6], [5, 7]];
+    let enemyShips = [[3, 7], [1, 1], [2, 1], [5, 5], [5, 6], [5, 7]];
     let hits = [];
+    let enemyHits = [];
 
     function drawGrid() {
       ctx.clearRect(0, 0, canvas.width, canvas.height); 
@@ -164,23 +166,83 @@
         drawGame();
       }
     });
+    
+    function computerTurn() {
+      let hitMade = false;
+      while (!hitMade) {
+        let x = Math.floor(Math.random() * gridSize);
+        let y = Math.floor(Math.random() * gridSize);
+        if (!enemyHits.some(hit => hit[0] === x && hit[1] === y)) {
+          let isHit = ships.some(ship => {
+            let hitOnShip = x >= ship.x / cellSize && x < (ship.x + ship.width) / cellSize &&
+                            y >= ship.y / cellSize && y < (ship.y + ship.height) / cellSize;
+            if (hitOnShip) {
+              ship.timesHit += 1;
+            }
+            return hitOnShip;
+          });
+          enemyHits.push([x, y]);
+          if (isHit) {
+            ctx.fillStyle = 'orange';
+            ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+          } else {
+            ctx.fillStyle = 'green';
+            ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+          }
+          
+		  ships.forEach(ship => {
+            if (ship.size <= ship.timesHit) {
+              ctx.fillStyle = 'red';
+              ctx.fillRect(ship.x, ship.y, ship.width, ship.height);
+            }
+          });
+          
+
+          hitMade = true;
+        }
+      }
+      userTurn = true;
+    }
 
     function handleCanvasClick(event) {
+      if (!userTurn) return;
       const rect = gridCanvas2.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
       const gridX = Math.floor(x / cellSize);
       const gridY = Math.floor(y / cellSize);
-
-      if (!hits.some(hit => hit[0] === gridX && hit[1] === gridY)) {
-        if (ships2.some(ship => ship[0] === gridX && ship[1] === gridY)) {
-          ctxGrid2.fillStyle = 'red';
-          ctxGrid2.fillRect(gridX * cellSize, gridY * cellSize, cellSize, cellSize);
-          hits.push([gridX, gridY]);
-        } else {
-          ctxGrid2.fillStyle = 'blue';
-          ctxGrid2.fillRect(gridX * cellSize, gridY * cellSize, cellSize, cellSize);
-          hits.push([gridX, gridY]);
+	  if (ships.every(ship => ship.placed == true)) {
+        if (!hits.some(hit => hit[0] === gridX && hit[1] === gridY)) {
+          if (enemyShips.some(ship => ship[0] === gridX && ship[1] === gridY)) {
+            ctxGrid2.fillStyle = 'orange';
+            ctxGrid2.fillRect(gridX * cellSize, gridY * cellSize, cellSize, cellSize);
+            hits.push([gridX, gridY]);
+          } else {
+            ctxGrid2.fillStyle = 'blue';
+            ctxGrid2.fillRect(gridX * cellSize, gridY * cellSize, cellSize, cellSize);
+            hits.push([gridX, gridY]);
+          }
+          if (hits.some(hit => hit[0] === 5 && hit[1] === 5)) {
+            if (hits.some(hit => hit[0] === 5 && hit[1] === 6)) {
+              if (hits.some(hit => hit[0] === 5 && hit[1] === 7)) {
+                ctxGrid2.fillStyle = 'red';
+                ctxGrid2.fillRect(150, 150, cellSize, 3 * cellSize);
+              }
+            }
+          }
+          if (hits.some(hit => hit[0] === 1 && hit[1] === 1)) {
+            if (hits.some(hit => hit[0] === 2 && hit[1] === 1)) {
+              ctxGrid2.fillStyle = 'red';
+              ctxGrid2.fillRect(30, 30, 2 * cellSize, cellSize);
+            }
+          }
+          if (hits.some(hit => hit[0] === 3 && hit[1] === 7)) {
+            ctxGrid2.fillStyle = 'red';
+            ctxGrid2.fillRect(90, 210, cellSize, cellSize);
+          }
+          userTurn = false;
+          computerTurn();
+          
         }
       }
     }
