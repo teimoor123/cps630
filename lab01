@@ -32,9 +32,9 @@
     let dragOffsetY = 0;
 
     let ships = [
-      { x: 30, y: 305, width: 30, height: 30, dragging: false },
-      { x: 90, y: 305, width: 30, height: 60, dragging: false },
-      { x: 150, y: 305, width: 30, height: 90, dragging: false }
+      { ogX: 30, ogY: 305, x: 30, y: 305, width: 30, height: 30, dragging: false, placed: false },
+      { ogX: 90, ogY: 305, x: 90, y: 305, width: 30, height: 60, dragging: false, placed: false },
+      { ogX: 150, ogY: 305, x: 150, y: 305, width: 30, height: 90, dragging: false, placed: false }
     ];
     let ships2 = [[5, 5], [5, 6], [5, 7]];
     let hits = [];
@@ -72,7 +72,7 @@
       const mouseY = event.clientY - rect.top;
 
       ships.forEach((ship, index) => {
-        if (mouseX > ship.x && mouseX < ship.x + ship.width && mouseY > ship.y && mouseY < ship.y + ship.height) {
+        if (!ship.placed && mouseX > ship.x && mouseX < ship.x + ship.width && mouseY > ship.y && mouseY < ship.y + ship.height) {
           dragging = true;
           dragOffsetX = mouseX - ship.x;
           dragOffsetY = mouseY - ship.y;
@@ -139,9 +139,26 @@
                 snappedY = 210;
               }
             }
-            ships[index].x = snappedX;
-            ships[index].y = snappedY;
-            ships[index].dragging = false;
+            let overlap = ships.some((otherShip, otherIndex) => {
+              if (index !== otherIndex) {
+                return !(snappedX + ship.width <= otherShip.x || 
+                         snappedX >= otherShip.x + otherShip.width ||
+                         snappedY + ship.height <= otherShip.y || 
+                         snappedY >= otherShip.y + otherShip.height);
+              }
+              return false;
+            });
+
+            if (!overlap) {
+              ship.x = snappedX;
+              ship.y = snappedY;
+              ship.placed = true;
+              ship.dragging = false;
+            } else {
+              ship.x = ship.ogX;
+              ship.y = ship.ogY;
+              ship.dragging = false;
+            }
           }
         });
         drawGame();
