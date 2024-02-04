@@ -1,146 +1,176 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Battleship Game</title>
-    <style>
-        #gameContainer {
-            position: relative;
-            width: 300px;
-            height: 300px;
-        }
-        #gridCanvas1 {
-        	position: absolute;
-            top: 0;
-            left: 0;
-            border: 1px solid black;
-        }
-        #shipCanvas {
-            top: 0;
-            left: 0;
-            border: 1px solid black;
-        }
-        #gridCanvas2 {
-        	position: relative;
-            border: 1px solid black;
-        }
-        
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Battleship Game</title>
+  <style>
+    #gameContainer {
+      position: relative;
+      width: 300px;
+      height: 900px;
+    }
+    #gridCanvas1, #gridCanvas2 {
+      border: 1px solid black;
+    }
+  </style>
 </head>
 <body>
 <div id="gameContainer">
-    <canvas id="gridCanvas1" width="300" height="300"></canvas>
-    <canvas id="shipCanvas" width="300" height="420"></canvas><br><br>
-    <canvas id="gridCanvas2" width="300" height="300"></canvas>
+  <canvas id="gridCanvas1" width="300" height="400"></canvas>
+  <canvas id="gridCanvas2" width="300" height="300"></canvas>
 </div>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const gridCanvas1 = document.getElementById('gridCanvas1');
-    const ctxGrid1 = gridCanvas1.getContext('2d');
+  document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('gridCanvas1');
+    const ctx = canvas.getContext('2d');
     const gridCanvas2 = document.getElementById('gridCanvas2');
     const ctxGrid2 = gridCanvas2.getContext('2d');
-    const shipCanvas = document.getElementById('shipCanvas');
-    const ctxShip = shipCanvas.getContext('2d');
     const gridSize = 10;
-    const cellSize = gridCanvas1.width / gridSize;
+    const cellSize = canvas.width / gridSize;
     let dragging = false;
     let dragOffsetX = 0;
     let dragOffsetY = 0;
-    let shipPosition = { x: 30, y: 315 }; 
-    const shipSize = { width: cellSize, height: cellSize * 3 }; 
-    let ships = [[5, 5], [6, 6], [7, 7]]; // Ship placement
+
+    let ships = [
+      { x: 30, y: 305, width: 30, height: 30, dragging: false },
+      { x: 90, y: 305, width: 30, height: 60, dragging: false },
+      { x: 150, y: 305, width: 30, height: 90, dragging: false }
+    ];
+    let ships2 = [[5, 5], [5, 6], [5, 7]];
     let hits = [];
 
     function drawGrid() {
-        ctxGrid1.clearRect(0, 0, gridCanvas1.width, gridCanvas1.height);
-        for (let i = 0; i < gridSize; i++) {
-            for (let j = 0; j < gridSize; j++) {
-                ctxGrid1.strokeRect(i * cellSize, j * cellSize, cellSize, cellSize);
-            }
-        }
-        ctxGrid2.clearRect(0, 0, gridCanvas2.width, gridCanvas2.height);
-        for (let i = 0; i < gridSize; i++) {
-            for (let j = 0; j < gridSize; j++) {
-                ctxGrid2.strokeRect(i * cellSize, j * cellSize, cellSize, cellSize);
-            }
-        }
-    }
-    
-    function drawShip() {
-        ctxShip.clearRect(0, 0, shipCanvas.width, shipCanvas.height);
-        ctxShip.fillStyle = 'blue';
-        ctxShip.fillRect(shipPosition.x, shipPosition.y, shipSize.width, shipSize.height);
-    }
-    
-    function handleCanvasClick(event) {
-        const rect = gridCanvas2.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        const gridX = Math.floor(x / cellSize);
-        const gridY = Math.floor(y / cellSize);
-
-        if (!hits.some(hit => hit[0] === gridX && hit[1] === gridY)) {
-          if (ships.some(ship => ship[0] === gridX && ship[1] === gridY)) {
-            ctxGrid2.fillStyle = 'red';
-            ctxGrid2.fillRect(gridX * cellSize, gridY * cellSize, cellSize, cellSize);
-            hits.push([gridX, gridY]);
-          } else {
-            ctxGrid2.fillStyle = 'blue';
-            ctxGrid2.fillRect(gridX * cellSize, gridY * cellSize, cellSize, cellSize);
-            hits.push([gridX, gridY]);
-          }
+      ctx.clearRect(0, 0, canvas.width, canvas.height); 
+      for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+          ctx.strokeRect(i * cellSize, j * cellSize, cellSize, cellSize);
         }
       }
-
-    shipCanvas.addEventListener('mousedown', function(event) {
-        let rect = shipCanvas.getBoundingClientRect();
-        let x = event.clientX - rect.left;
-        let y = event.clientY - rect.top;
-        if (x >= shipPosition.x && x <= shipPosition.x + shipSize.width &&
-            y >= shipPosition.y && y <= shipPosition.y + shipSize.height) {
-            dragging = true;
-            dragOffsetX = x - shipPosition.x;
-            dragOffsetY = y - shipPosition.y;
+      ctxGrid2.clearRect(0, 0, canvas.width, canvas.height); 
+      for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+          ctxGrid2.strokeRect(i * cellSize, j * cellSize, cellSize, cellSize);
         }
+      }
+    }
+
+    function drawShips() {
+      ships.forEach(ship => {
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(ship.x, ship.y, ship.width, ship.height);
+      });
+    }
+
+    function drawGame() {
+      drawGrid(); 
+      drawShips();
+    }
+
+    canvas.addEventListener('mousedown', function(event) {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+
+      ships.forEach((ship, index) => {
+        if (mouseX > ship.x && mouseX < ship.x + ship.width && mouseY > ship.y && mouseY < ship.y + ship.height) {
+          dragging = true;
+          dragOffsetX = mouseX - ship.x;
+          dragOffsetY = mouseY - ship.y;
+          ships[index].dragging = true;
+        }
+      });
     });
 
     window.addEventListener('mousemove', function(event) {
-        if (dragging) {
-            let rect = shipCanvas.getBoundingClientRect();
-            shipPosition.x = event.clientX - rect.left - dragOffsetX;
-            shipPosition.y = event.clientY - rect.top - dragOffsetY;
-            drawShip();
-        }
+      if (dragging) {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left - dragOffsetX;
+        const mouseY = event.clientY - rect.top - dragOffsetY;
+        
+        ships.forEach((ship, index) => {
+          if (ship.dragging) {
+            ships[index].x = mouseX;
+            ships[index].y = mouseY;
+          }
+        });
+
+        drawGame();
+      }
     });
 
     window.addEventListener('mouseup', function() {
-        if (dragging) {
+      if (dragging) {
         dragging = false;
-        let snappedX = Math.round(shipPosition.x / cellSize) * cellSize;
-        let snappedY = Math.round(shipPosition.y / cellSize) * cellSize;
-
-        if (snappedY < 210) {
-            shipPosition.x = snappedX;
-            shipPosition.y = snappedY;
-        } 
-        else {
-            shipPosition.x = snappedX;
-            shipPosition.y = 210;
-        }
-
-        drawShip();
-    }
+        ships.forEach((ship, index) => {
+          if (ship.dragging) {
+            let snappedX = Math.round(ship.x / cellSize) * cellSize;
+            let snappedY = Math.round(ship.y / cellSize) * cellSize;
+            if (index == 0) {
+              if (snappedX < 0) {
+                snappedX = 0;
+              } else if (snappedX > 270) {
+                snappedX = 270;
+              }
+              if (snappedY < 0) {
+                snappedY = 0;
+              } else if (snappedY > 270) {
+                snappedY = 270;
+              }
+            } else if (index == 1) {
+              if (snappedX < 0) {
+                snappedX = 0;
+              } else if (snappedX > 270) {
+                snappedX = 270;
+              }
+              if (snappedY < 0) {
+                snappedY = 0;
+              } else if (snappedY > 240) {
+                snappedY = 240;
+              }
+            } else {
+              if (snappedX < 0) {
+                snappedX = 0;
+              } else if (snappedX > 270) {
+                snappedX = 270;
+              }
+              if (snappedY < 0) {
+                snappedY = 0;
+              } else if (snappedY > 210) {
+                snappedY = 210;
+              }
+            }
+            ships[index].x = snappedX;
+            ships[index].y = snappedY;
+            ships[index].dragging = false;
+          }
+        });
+        drawGame();
+      }
     });
 
-    function initGame() {
-        drawGrid();
-        drawShip();
-        gridCanvas2.addEventListener('click', handleCanvasClick);
-    }
+    function handleCanvasClick(event) {
+      const rect = gridCanvas2.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const gridX = Math.floor(x / cellSize);
+      const gridY = Math.floor(y / cellSize);
 
-    initGame();
-});
+      if (!hits.some(hit => hit[0] === gridX && hit[1] === gridY)) {
+        if (ships2.some(ship => ship[0] === gridX && ship[1] === gridY)) {
+          ctxGrid2.fillStyle = 'red';
+          ctxGrid2.fillRect(gridX * cellSize, gridY * cellSize, cellSize, cellSize);
+          hits.push([gridX, gridY]);
+        } else {
+          ctxGrid2.fillStyle = 'blue';
+          ctxGrid2.fillRect(gridX * cellSize, gridY * cellSize, cellSize, cellSize);
+          hits.push([gridX, gridY]);
+        }
+      }
+    }
+    
+    drawGame();
+    gridCanvas2.addEventListener('click', handleCanvasClick);
+  });
 </script>
 </body>
 </html>
