@@ -18,6 +18,9 @@
 <div id="gameContainer">
   <canvas id="gridCanvas1" width="300" height="400"></canvas>
   <canvas id="gridCanvas2" width="300" height="300"></canvas>
+  <div id="hoverMessage"></div>
+  <div id="userRecord">Player 1 - Hits: 0, Misses: 0</div>
+  <div id="computerRecord">Computer - Hits: 0, Misses: 0</div>
 </div>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -40,6 +43,10 @@
     let enemyShips = [[3, 7], [1, 1], [2, 1], [5, 5], [5, 6], [5, 7]];
     let hits = [];
     let enemyHits = [];
+    let userHitCount = 0;
+    let userMissCount = 0;
+    let computerHitCount = 0;
+    let computerMissCount = 0;
 
     function drawGrid() {
       ctx.clearRect(0, 0, canvas.width, canvas.height); 
@@ -185,9 +192,11 @@
           if (isHit) {
             ctx.fillStyle = 'orange';
             ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+            computerHitCount += 1;
           } else {
             ctx.fillStyle = 'green';
             ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+            computerMissCount += 1;
           }
           
 		  ships.forEach(ship => {
@@ -196,7 +205,7 @@
               ctx.fillRect(ship.x, ship.y, ship.width, ship.height);
             }
           });
-          
+          document.getElementById('computerRecord').textContent = `Player 1 - Hits: ${computerHitCount}, Misses: ${computerMissCount}`;
 
           hitMade = true;
         }
@@ -217,10 +226,12 @@
             ctxGrid2.fillStyle = 'orange';
             ctxGrid2.fillRect(gridX * cellSize, gridY * cellSize, cellSize, cellSize);
             hits.push([gridX, gridY]);
+            userHitCount += 1;
           } else {
             ctxGrid2.fillStyle = 'blue';
             ctxGrid2.fillRect(gridX * cellSize, gridY * cellSize, cellSize, cellSize);
             hits.push([gridX, gridY]);
+            userMissCount += 1;
           }
           if (hits.some(hit => hit[0] === 5 && hit[1] === 5)) {
             if (hits.some(hit => hit[0] === 5 && hit[1] === 6)) {
@@ -240,15 +251,33 @@
             ctxGrid2.fillStyle = 'red';
             ctxGrid2.fillRect(90, 210, cellSize, cellSize);
           }
+          document.getElementById('userRecord').textContent = `Player 1 - Hits: ${userHitCount}, Misses: ${userMissCount}`;
           userTurn = false;
-          computerTurn();
-          
+          computerTurn(); 
         }
+      }
+    }
+    function handleCanvasHover(event) {
+      const rect = gridCanvas2.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const gridX = Math.floor(x / cellSize);
+      const gridY = Math.floor(y / cellSize);
+
+      // Check if the hovered cell was previously bombed
+      const cellBombed = hits.some(hit => hit[0] === gridX && hit[1] === gridY);
+      if(cellBombed) {
+        // Display a message for bombed cells
+        document.getElementById('hoverMessage').textContent = `Cell at (${gridX}, ${gridY}) was already bombed.`;
+      } else {
+        document.getElementById('hoverMessage').textContent = '';
       }
     }
     
     drawGame();
     gridCanvas2.addEventListener('click', handleCanvasClick);
+    gridCanvas2.addEventListener('mousemove', handleCanvasHover);
+
   });
 </script>
 </body>
