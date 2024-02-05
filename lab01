@@ -1,4 +1,4 @@
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,9 +18,11 @@
 <div id="gameContainer">
   <canvas id="gridCanvas1" width="300" height="400"></canvas>
   <canvas id="gridCanvas2" width="300" height="300"></canvas>
-  <div id="hoverMessage"></div>
+  <div id="hoverMessage">Good Luck!</div>
   <div id="userRecord">Player 1 - Hits: 0, Misses: 0</div>
   <div id="computerRecord">Computer - Hits: 0, Misses: 0</div>
+  <div id="winnerMessage"></div>
+  <button id="newGameButton" style="display: none;">New Game</button>
 </div>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -47,6 +49,7 @@
     let userMissCount = 0;
     let computerHitCount = 0;
     let computerMissCount = 0;
+    let gameOver = false;
 
     function drawGrid() {
       ctx.clearRect(0, 0, canvas.width, canvas.height); 
@@ -175,6 +178,7 @@
     });
     
     function computerTurn() {
+      if (gameOver) return;
       let hitMade = false;
       while (!hitMade) {
         let x = Math.floor(Math.random() * gridSize);
@@ -210,10 +214,16 @@
           hitMade = true;
         }
       }
+      if (computerHitCount == 6) {
+        gameOver = true;
+        document.getElementById('winnerMessage').textContent = `Computer wins`;
+        document.getElementById('newGameButton').style.display = "block";
+      }
       userTurn = true;
     }
 
     function handleCanvasClick(event) {
+      if (gameOver) return;
       if (!userTurn) return;
       const rect = gridCanvas2.getBoundingClientRect();
       const x = event.clientX - rect.left;
@@ -253,8 +263,16 @@
           }
           document.getElementById('userRecord').textContent = `Player 1 - Hits: ${userHitCount}, Misses: ${userMissCount}`;
           userTurn = false;
+          if (userHitCount == 6) {
+          	gameOver = true;
+            document.getElementById('winnerMessage').textContent = `User 1 wins`;
+            document.getElementById('newGameButton').style.display = "block";
+          }
           computerTurn(); 
+        } else {
+          alert("Cell was already bombed!");
         }
+        
       }
     }
     function handleCanvasHover(event) {
@@ -264,20 +282,46 @@
       const gridX = Math.floor(x / cellSize);
       const gridY = Math.floor(y / cellSize);
 
-      // Check if the hovered cell was previously bombed
       const cellBombed = hits.some(hit => hit[0] === gridX && hit[1] === gridY);
-      if(cellBombed) {
-        // Display a message for bombed cells
-        document.getElementById('hoverMessage').textContent = `Cell at (${gridX}, ${gridY}) was already bombed.`;
-      } else {
-        document.getElementById('hoverMessage').textContent = '';
+      if (ships.every(ship => ship.placed == true)) {
+        if(cellBombed) {
+          document.getElementById('hoverMessage').textContent = `Cell at (${gridX}, ${gridY}) was already bombed.`;
+        } else {
+          document.getElementById('hoverMessage').textContent = `Bomb placement valid`;
+        }
       }
+    }
+    
+    function resetGame() {
+      userTurn = true;
+      gameOver = false;
+      userHitCount = 0;
+      userMissCount = 0;
+      computerHitCount = 0;
+      computerMissCount = 0;
+      hits = [];
+      enemyHits = [];
+
+      ships.forEach(ship => {
+        ship.x = ship.ogX;
+        ship.y = ship.ogY;
+        ship.placed = false;
+        ship.timesHit = 0;
+      });
+
+      document.getElementById('userRecord').textContent = "Player 1 - Hits: 0, Misses: 0";
+      document.getElementById('computerRecord').textContent = "Computer - Hits: 0, Misses: 0";
+      document.getElementById('winnerMessage').textContent = "";
+      document.getElementById('hoverMessage').textContent = "Good Luck!";
+      document.getElementById('newGameButton').style.display = "none";
+
+      drawGame();
     }
     
     drawGame();
     gridCanvas2.addEventListener('click', handleCanvasClick);
     gridCanvas2.addEventListener('mousemove', handleCanvasHover);
-
+    document.getElementById('newGameButton').addEventListener('click', resetGame);
   });
 </script>
 </body>
