@@ -10,13 +10,22 @@
       height: 900px;
     }
     #gridCanvas1, #gridCanvas2 {
-      border: 1px solid black;
+      border: 2px solid black;
+    }
+    h1 {
+      text-align: center;
+    }
+    #winnerMessage {
+      font-size: 60px;
     }
   </style>
 </head>
-<body>
+<body style="background-color:#ADD8E6">
+<h1 style="font-family:fantasy">Battleship</h1>
 <div id="gameContainer">
+  <h2 style="font-family:fantasy">Player 1 Grid</h2>
   <canvas id="gridCanvas1" width="300" height="400"></canvas>
+  <h2 style="font-family:fantasy"> Computer Grid</h2>
   <canvas id="gridCanvas2" width="300" height="300"></canvas>
   <div id="hoverMessage">Good Luck!</div>
   <div id="userRecord">Player 1 - Hits: 0, Misses: 0</div>
@@ -27,11 +36,11 @@
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const canvas = document.getElementById('gridCanvas1');
-    const ctx = canvas.getContext('2d');
+    const ctxGrid1 = canvas.getContext('2d');
     const gridCanvas2 = document.getElementById('gridCanvas2');
     const ctxGrid2 = gridCanvas2.getContext('2d');
     const gridSize = 10;
-    const cellSize = canvas.width / gridSize;
+    const spotSize = canvas.width / gridSize;
     let dragging = false;
     let dragOffsetX = 0;
     let dragOffsetY = 0;
@@ -52,24 +61,24 @@
     let gameOver = false;
 
     function drawGrid() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height); 
+      ctxGrid1.clearRect(0, 0, canvas.width, canvas.height); 
       for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
-          ctx.strokeRect(i * cellSize, j * cellSize, cellSize, cellSize);
+          ctxGrid1.strokeRect(i * spotSize, j * spotSize, spotSize, spotSize);
         }
       }
       ctxGrid2.clearRect(0, 0, canvas.width, canvas.height); 
       for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
-          ctxGrid2.strokeRect(i * cellSize, j * cellSize, cellSize, cellSize);
+          ctxGrid2.strokeRect(i * spotSize, j * spotSize, spotSize, spotSize);
         }
       }
     }
 
     function drawShips() {
       ships.forEach(ship => {
-        ctx.fillStyle = 'blue';
-        ctx.fillRect(ship.x, ship.y, ship.width, ship.height);
+        ctxGrid1.fillStyle = 'blue';
+        ctxGrid1.fillRect(ship.x, ship.y, ship.width, ship.height);
       });
     }
 
@@ -115,55 +124,55 @@
         dragging = false;
         ships.forEach((ship, index) => {
           if (ship.dragging) {
-            let snappedX = Math.round(ship.x / cellSize) * cellSize;
-            let snappedY = Math.round(ship.y / cellSize) * cellSize;
+            let droppedX = Math.round(ship.x / spotSize) * spotSize;
+            let droppedY = Math.round(ship.y / spotSize) * spotSize;
             if (index == 0) {
-              if (snappedX < 0) {
-                snappedX = 0;
-              } else if (snappedX > 270) {
-                snappedX = 270;
+              if (droppedX < 0) {
+                droppedX = 0;
+              } else if (droppedX > 270) {
+                droppedX = 270;
               }
-              if (snappedY < 0) {
-                snappedY = 0;
-              } else if (snappedY > 270) {
-                snappedY = 270;
+              if (droppedY < 0) {
+                droppedY = 0;
+              } else if (droppedY > 270) {
+                droppedY = 270;
               }
             } else if (index == 1) {
-              if (snappedX < 0) {
-                snappedX = 0;
-              } else if (snappedX > 270) {
-                snappedX = 270;
+              if (droppedX < 0) {
+                droppedX = 0;
+              } else if (droppedX > 270) {
+                droppedX = 270;
               }
-              if (snappedY < 0) {
-                snappedY = 0;
-              } else if (snappedY > 240) {
-                snappedY = 240;
+              if (droppedY < 0) {
+                droppedY = 0;
+              } else if (droppedY > 240) {
+                droppedY = 240;
               }
             } else {
-              if (snappedX < 0) {
-                snappedX = 0;
-              } else if (snappedX > 270) {
-                snappedX = 270;
+              if (droppedX < 0) {
+                droppedX = 0;
+              } else if (droppedX > 270) {
+                droppedX = 270;
               }
-              if (snappedY < 0) {
-                snappedY = 0;
-              } else if (snappedY > 210) {
-                snappedY = 210;
+              if (droppedY < 0) {
+                droppedY = 0;
+              } else if (droppedY > 210) {
+                droppedY = 210;
               }
             }
             let overlap = ships.some((otherShip, otherIndex) => {
               if (index !== otherIndex) {
-                return !(snappedX + ship.width <= otherShip.x || 
-                         snappedX >= otherShip.x + otherShip.width ||
-                         snappedY + ship.height <= otherShip.y || 
-                         snappedY >= otherShip.y + otherShip.height);
+                return !(droppedX + ship.width <= otherShip.x || 
+                         droppedX >= otherShip.x + otherShip.width ||
+                         droppedY + ship.height <= otherShip.y || 
+                         droppedY >= otherShip.y + otherShip.height);
               }
               return false;
             });
 
             if (!overlap) {
-              ship.x = snappedX;
-              ship.y = snappedY;
+              ship.x = droppedX;
+              ship.y = droppedY;
               ship.placed = true;
               ship.dragging = false;
             } else {
@@ -185,8 +194,8 @@
         let y = Math.floor(Math.random() * gridSize);
         if (!enemyHits.some(hit => hit[0] === x && hit[1] === y)) {
           let isHit = ships.some(ship => {
-            let hitOnShip = x >= ship.x / cellSize && x < (ship.x + ship.width) / cellSize &&
-                            y >= ship.y / cellSize && y < (ship.y + ship.height) / cellSize;
+            let hitOnShip = x >= ship.x / spotSize && x < (ship.x + ship.width) / spotSize &&
+                            y >= ship.y / spotSize && y < (ship.y + ship.height) / spotSize;
             if (hitOnShip) {
               ship.timesHit += 1;
             }
@@ -194,19 +203,19 @@
           });
           enemyHits.push([x, y]);
           if (isHit) {
-            ctx.fillStyle = 'orange';
-            ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+            ctxGrid1.fillStyle = 'orange';
+            ctxGrid1.fillRect(x * spotSize, y * spotSize, spotSize, spotSize);
             computerHitCount += 1;
           } else {
-            ctx.fillStyle = 'green';
-            ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+            ctxGrid1.fillStyle = 'green';
+            ctxGrid1.fillRect(x * spotSize, y * spotSize, spotSize, spotSize);
             computerMissCount += 1;
           }
           
 		  ships.forEach(ship => {
             if (ship.size <= ship.timesHit) {
-              ctx.fillStyle = 'red';
-              ctx.fillRect(ship.x, ship.y, ship.width, ship.height);
+              ctxGrid1.fillStyle = 'red';
+              ctxGrid1.fillRect(ship.x, ship.y, ship.width, ship.height);
             }
           });
           document.getElementById('computerRecord').textContent = `Player 1 - Hits: ${computerHitCount}, Misses: ${computerMissCount}`;
@@ -216,7 +225,7 @@
       }
       if (computerHitCount == 6) {
         gameOver = true;
-        document.getElementById('winnerMessage').textContent = `Computer wins`;
+        document.getElementById('winnerMessage').textContent = `Computer wins!`;
         document.getElementById('newGameButton').style.display = "block";
       }
       userTurn = true;
@@ -228,18 +237,18 @@
       const rect = gridCanvas2.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
-      const gridX = Math.floor(x / cellSize);
-      const gridY = Math.floor(y / cellSize);
+      const gridX = Math.floor(x / spotSize);
+      const gridY = Math.floor(y / spotSize);
 	  if (ships.every(ship => ship.placed == true)) {
         if (!hits.some(hit => hit[0] === gridX && hit[1] === gridY)) {
           if (enemyShips.some(ship => ship[0] === gridX && ship[1] === gridY)) {
             ctxGrid2.fillStyle = 'orange';
-            ctxGrid2.fillRect(gridX * cellSize, gridY * cellSize, cellSize, cellSize);
+            ctxGrid2.fillRect(gridX * spotSize, gridY * spotSize, spotSize, spotSize);
             hits.push([gridX, gridY]);
             userHitCount += 1;
           } else {
             ctxGrid2.fillStyle = 'blue';
-            ctxGrid2.fillRect(gridX * cellSize, gridY * cellSize, cellSize, cellSize);
+            ctxGrid2.fillRect(gridX * spotSize, gridY * spotSize, spotSize, spotSize);
             hits.push([gridX, gridY]);
             userMissCount += 1;
           }
@@ -247,52 +256,56 @@
             if (hits.some(hit => hit[0] === 5 && hit[1] === 6)) {
               if (hits.some(hit => hit[0] === 5 && hit[1] === 7)) {
                 ctxGrid2.fillStyle = 'red';
-                ctxGrid2.fillRect(150, 150, cellSize, 3 * cellSize);
+                ctxGrid2.fillRect(150, 150, spotSize, 3 * spotSize);
               }
             }
           }
           if (hits.some(hit => hit[0] === 1 && hit[1] === 1)) {
             if (hits.some(hit => hit[0] === 2 && hit[1] === 1)) {
               ctxGrid2.fillStyle = 'red';
-              ctxGrid2.fillRect(30, 30, 2 * cellSize, cellSize);
+              ctxGrid2.fillRect(30, 30, 2 * spotSize, spotSize);
             }
           }
           if (hits.some(hit => hit[0] === 3 && hit[1] === 7)) {
             ctxGrid2.fillStyle = 'red';
-            ctxGrid2.fillRect(90, 210, cellSize, cellSize);
+            ctxGrid2.fillRect(90, 210, spotSize, spotSize);
           }
           document.getElementById('userRecord').textContent = `Player 1 - Hits: ${userHitCount}, Misses: ${userMissCount}`;
           userTurn = false;
           if (userHitCount == 6) {
           	gameOver = true;
-            document.getElementById('winnerMessage').textContent = `User 1 wins`;
+            document.getElementById('winnerMessage').textContent = `User wins!`;
             document.getElementById('newGameButton').style.display = "block";
           }
           computerTurn(); 
         } else {
-          alert("Cell was already bombed!");
+          alert("spot was already bombed!");
         }
         
       }
     }
     function handleCanvasHover(event) {
-      const rect = gridCanvas2.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      const gridX = Math.floor(x / cellSize);
-      const gridY = Math.floor(y / cellSize);
+      if (!gameOver) {
+        const rect = gridCanvas2.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const gridX = Math.floor(x / spotSize);
+        const gridY = Math.floor(y / spotSize);
 
-      const cellBombed = hits.some(hit => hit[0] === gridX && hit[1] === gridY);
-      if (ships.every(ship => ship.placed == true)) {
-        if(cellBombed) {
-          document.getElementById('hoverMessage').textContent = `Cell at (${gridX}, ${gridY}) was already bombed.`;
-        } else {
-          document.getElementById('hoverMessage').textContent = `Bomb placement valid`;
+        const spotBombed = hits.some(hit => hit[0] === gridX && hit[1] === gridY);
+        if (ships.every(ship => ship.placed == true)) {
+          if(spotBombed) {
+            document.getElementById('hoverMessage').textContent = `spot at (${gridX}, ${gridY}) was already bombed.`;
+          } else {
+            document.getElementById('hoverMessage').textContent = `Bomb placement valid`;
+          }
         }
+      } else {
+        document.getElementById('hoverMessage').textContent = ``;
       }
     }
     
-    function resetGame() {
+    function newGame() {
       userTurn = true;
       gameOver = false;
       userHitCount = 0;
@@ -321,7 +334,7 @@
     drawGame();
     gridCanvas2.addEventListener('click', handleCanvasClick);
     gridCanvas2.addEventListener('mousemove', handleCanvasHover);
-    document.getElementById('newGameButton').addEventListener('click', resetGame);
+    document.getElementById('newGameButton').addEventListener('click', newGame);
   });
 </script>
 </body>
