@@ -218,7 +218,7 @@
               ctxGrid1.fillRect(ship.x, ship.y, ship.width, ship.height);
             }
           });
-          document.getElementById('computerRecord').textContent = `Player 1 - Hits: ${computerHitCount}, Misses: ${computerMissCount}`;
+          document.getElementById('computerRecord').textContent = `Computer - Hits: ${computerHitCount}, Misses: ${computerMissCount}`;
 
           hitMade = true;
         }
